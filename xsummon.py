@@ -22,17 +22,21 @@ argparser.add_argument('-a', '--args', default='',
                        help='passed to program if run by xsummon, example: xsummon firefox --args="--fullscreen" ')
 argparser.add_argument('-g', '--go', action='store_true',
                        help="go to window's desktop instead of summoning it to the active desktop")
+argparser.add_argument('-v', '--verbose', action='store_true')
 args = argparser.parse_args()
 
 candidatePIDs = run(f'pgrep {args.program}').split()
 windowInfos = [line.split()[:3] for line in run('wmctrl -lp').split('\n') if line]  # windowid, desktop, pid
-print(f'Candidate PIDs for window process of {args.program}:\n', '\n'.join(candidatePIDs))
+
+if args.verbose:
+    print(f'Candidate PIDs for window process of {args.program}:\n', '\n'.join(candidatePIDs))
 
 for windowID, windowDesktop, windowPID in windowInfos:
     if windowPID not in candidatePIDs:
         continue
 
-    print('PID match found:', windowPID, '\nwindowID:', windowID)
+    if args.verbose:
+        print('PID match found:', windowPID, '\nwindowID:', windowID)
 
     windowID = int(windowID, 16)
     windowDesktop = int(windowDesktop)
@@ -57,4 +61,6 @@ for windowID, windowDesktop, windowPID in windowInfos:
         run(f'xdotool windowactivate {windowID}')
     break
 else:
+    if args.verbose:
+        print(f'Couldn\'t find a window found for {args.program}.')
     run(' '.join([args.program, args.args]))
