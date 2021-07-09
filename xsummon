@@ -1,18 +1,25 @@
 #!/usr/bin/python3
 import subprocess
 import argparse
+from sys import exit
 
 
 def run(command):
     # Parses a string, runs as bash command, returns output (or throws exception if something went wrong)
-    response = subprocess.run(
-        command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if response.returncode <= 1:
-        return response.stdout.decode('utf-8')
-    else:
+    try:
+        response = subprocess.run(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        print(f'Error encountered running: {command}\nExecutable not found.')
+        exit()
+
+    if response.stderr:
+        print(f'Error encountered running: {command}')
         print(f'Returncode:{response.returncode}\n',
-              response.stdout.decode('utf-8'))
-        raise Exception
+              response.stdout.decode('utf-8'),
+              response.stderr.decode('utf-8'))
+        exit()
+
+    return response.stdout.decode('utf-8')
 
 
 argparser = argparse.ArgumentParser(description='Call/hide a specific window.')
