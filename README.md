@@ -1,5 +1,5 @@
 # Xsummon
-This is intended as a way to call windows of specific programs straight to you, kind of how [guake](http://guake-project.org/) works, but for any program. The intended way is to set shortcuts (in your DE settings) for every program you want, but if you've got better ideas let me know!
+Calls windows of specific programs straight to you, kind of how [guake](http://guake-project.org/) works, but for any program. It's intended to be used with gestures/hot-corners/shortcuts (set in your DE settings) for your most frequent programs. If you've got better ideas let me know!
 
 
 
@@ -20,17 +20,27 @@ Make sure you have the required packages:
 - python3
 
 
-
 Then just download it, make it executable and copy it to /usr/bin/ 
 
 ```
+git clone https://github.com/Haptein/xsummon && cd xsummon
 chmod +x xsummon
-sudo mv ./xsummon /usr/bin/
+sudo cp ./xsummon /usr/bin/
+```
+
+
+
+## Uninstall
+
+To uninstall just delete the file.
+```
+sudo rm /usr/bin/xsummon
 ```
 
 
 
 ## Usage
+
 ```
 usage: xsummon [-h] [-a ARGS] [-g] program
 
