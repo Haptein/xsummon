@@ -19,6 +19,10 @@ Make sure you have the required packages:
 - wmctrl
 - python3
 
+Optionally:
+
+- libnotify
+
 
 Then just download it, make it executable and copy it to /usr/bin/ 
 
