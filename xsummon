@@ -16,7 +16,7 @@ def run(command, allowError=False):
             run('notify-send xsummon.log ExecutableNotFound')
         exit()
 
-    if response.stderr and not allowError:
+    if response.returncode > 0 and not allowError:
         errorLog = f"Command:{command}\n\
             Returncode:{response.returncode}\n\
             stdout:{response.stdout.decode('utf-8')}\n\
@@ -44,7 +44,7 @@ argparser.add_argument('-g', '--go', action='store_true',
 argparser.add_argument('-v', '--verbose', action='store_true')
 args = argparser.parse_args()
 
-candidatePIDs = run(f'pgrep {args.program}').split()
+candidatePIDs = run(f'pgrep {args.program}', allowError=True).split()
 windowInfos = [line.split()[:3] for line in run('wmctrl -lp').split('\n') if line]  # windowid, desktop, pid
 
 if args.verbose:
