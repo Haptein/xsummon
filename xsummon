@@ -8,7 +8,7 @@ PIPE = subprocess.PIPE
 def run(command, allowError=False):
     # Parses a string, runs as bash command, returns output (or throws exception if something went wrong)
     try:
-        response = subprocess.run(command.split(), stdout=PIPE, stderr=PIPE)
+        response = subprocess.run(command, stdout=PIPE, stderr=PIPE, shell=True)
     except FileNotFoundError:
         print(f'Error encountered running: {command}\nExecutable not found.')
         notifySendAvailable = not bool(subprocess.run(['which', 'notify-send'], stdout=PIPE).returncode)
