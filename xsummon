@@ -3,16 +3,32 @@ import argparse
 from sys import exit
 from subprocess import run, PIPE
 
+
+argparser = argparse.ArgumentParser(description='Call/hide a specific window.')
+argparser.add_argument('program',
+                       help='name of program')
+argparser.add_argument('-a', '--args', default='',
+                       help='passed to program if run by xsummon, example: xsummon firefox --args="--fullscreen" ')
+argparser.add_argument('-g', '--go', action='store_true',
+                       help="go to window's desktop instead of summoning it to the active desktop")
+argparser.add_argument('-m', '--mute', action='store_true',
+                       help="mute notifications (if libnotify is present)")
+argparser.add_argument('-v', '--verbose', action='store_true')
+args = argparser.parse_args()
+
+def notify(message):
+    notifySendAvailable = not bool(run('which notify-send', stdout=PIPE, shell=True).returncode)
+    if not args.mute and notifySendAvailable:
+        shell('notify-send xsummon ' + message)
+
 def shell(command, allowError=False):
     # runs as bash command and returns output (or notifies exception if something went wrong)
     try:
         response = run(command, stdout=PIPE, stderr=PIPE, shell=True)
     except FileNotFoundError:
         print(f'Error encountered running: {command}\nExecutable not found.')
-        notifySendAvailable = not bool(run(['which', 'notify-send'], stdout=PIPE).returncode)
-        if notifySendAvailable:
-            shell('notify-send xsummon.log ExecutableNotFound')
-        exit()
+        notify('ExecutableNotFound')
+        exit(1)
 
     if response.returncode > 0 and not allowError:
         errorLog = (f'Command:{command}\n'
@@ -24,23 +40,11 @@ def shell(command, allowError=False):
             print(f'Error encountered running: {command}\n'
                   'Details written to xsummon.log')
 
-        notifySendAvailable = not bool(run(['which', 'notify-send'], stdout=PIPE).returncode)
-        if notifySendAvailable:
-            shell('notify-send xsummon.log UnexpectedError')
-        exit()
+        notify('UnexpectedError')
+        exit(2)
 
     return response.stdout.decode('utf-8')
 
-
-argparser = argparse.ArgumentParser(description='Call/hide a specific window.')
-argparser.add_argument('program',
-                       help='name of program')
-argparser.add_argument('-a', '--args', default='',
-                       help='passed to program if run by xsummon, example: xsummon firefox --args="--fullscreen" ')
-argparser.add_argument('-g', '--go', action='store_true',
-                       help="go to window's desktop instead of summoning it to the active desktop")
-argparser.add_argument('-v', '--verbose', action='store_true')
-args = argparser.parse_args()
 
 candidatePIDs = shell(f'pgrep {args.program[:15]}', allowError=True).split()
 windowInfos = [line.split()[:3] for line in shell('wmctrl -lp').split('\n') if line]  # windowid, desktop, pid
