@@ -33,8 +33,8 @@ def shell(command, allowError=False):
     if response.returncode > 0 and not allowError:
         errorLog = (f'Command:{command}\n'
                     f'Returncode:{response.returncode}\n'
-                    f'stdout:{response.stdout.decode("utf-8")}\n'
-                    f'stderr:{response.stderr.decode("utf-8")}\n')
+                    f'stdout:{response.stdout.decode("utf-8").strip()}\n'
+                    f'stderr:{response.stderr.decode("utf-8").strip()}\n\n')
         with open('xsummon.log', 'a') as file:
             file.write(errorLog)
             print(f'Error encountered running: {command}\n'
@@ -50,7 +50,10 @@ candidatePIDs = shell(f'pgrep {args.program[:15]}', allowError=True).split()
 windowInfos = [line.split()[:3] for line in shell('wmctrl -lp').split('\n') if line]  # windowid, desktop, pid
 
 if args.verbose:
-    print(f'Candidate PIDs for window process of {args.program}:\n' + '\n'.join(candidatePIDs))
+    if candidatePIDs:
+        print(f'Candidate PIDs for window process of {args.program}:\n' + '\n'.join(candidatePIDs))
+    else:
+        print(f'No candidate PID found for window process "{args.program}".')
 
 for windowID, windowDesktop, windowPID in windowInfos:
     if windowPID not in candidatePIDs:
@@ -84,5 +87,5 @@ for windowID, windowDesktop, windowPID in windowInfos:
 else:
     # No window with associated process name {args.program}
     if args.verbose:
-        print(f'Couldn\'t find a window found for {args.program}.')
+        print(f'Couldn\'t find a window for {args.program}.')
     shell(f'{args.program} {args.args}')
