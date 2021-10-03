@@ -23,9 +23,8 @@ def notify(message):
 
 def shell(command, allowError=False):
     # runs as bash command and returns output (or notifies exception if something went wrong)
-    try:
-        response = run(command, stdout=PIPE, stderr=PIPE, shell=True)
-    except FileNotFoundError:
+    response = run(command, stdout=PIPE, stderr=PIPE, shell=True)
+    if response.returncode == 127:  # FileNotFoundError
         print(f'Error encountered running: {command}\nExecutable not found.')
         notify('ExecutableNotFound')
         exit(1)
