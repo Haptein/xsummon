@@ -6,7 +6,7 @@ from sys import exit
 PIPE = subprocess.PIPE
 
 def run(command, allowError=False):
-    # Parses a string, runs as bash command, returns output (or throws exception if something went wrong)
+    # runs as bash command and returns output (or notifies exception if something went wrong)
     try:
         response = subprocess.run(command, stdout=PIPE, stderr=PIPE, shell=True)
     except FileNotFoundError:
@@ -17,14 +17,14 @@ def run(command, allowError=False):
         exit()
 
     if response.returncode > 0 and not allowError:
-        errorLog = f"Command:{command}\n\
-            Returncode:{response.returncode}\n\
-            stdout:{response.stdout.decode('utf-8')}\n\
-            stderr:{response.stderr.decode('utf-8')}"
-        with open('xsummon.log', 'w') as file:
+        errorLog = (f'Command:{command}\n'
+                    f'Returncode:{response.returncode}\n'
+                    f'stdout:{response.stdout.decode("utf-8")}\n'
+                    f'stderr:{response.stderr.decode("utf-8")}\n')
+        with open('xsummon.log', 'a') as file:
             file.write(errorLog)
-            print(f'Error encountered running: {command}\n\
-                    Details written to xsummon.log')
+            print(f'Error encountered running: {command}\n'
+                  'Details written to xsummon.log')
 
         notifySendAvailable = not bool(subprocess.run(['which', 'notify-send'], stdout=PIPE).returncode)
         if notifySendAvailable:
@@ -48,7 +48,7 @@ candidatePIDs = run(f'pgrep {args.program}', allowError=True).split()
 windowInfos = [line.split()[:3] for line in run('wmctrl -lp').split('\n') if line]  # windowid, desktop, pid
 
 if args.verbose:
-    print(f'Candidate PIDs for window process of {args.program}:\n', '\n'.join(candidatePIDs))
+    print(f'Candidate PIDs for window process of {args.program}:\n' + '\n'.join(candidatePIDs))
 
 for windowID, windowDesktop, windowPID in windowInfos:
     if windowPID not in candidatePIDs:
@@ -80,6 +80,7 @@ for windowID, windowDesktop, windowPID in windowInfos:
         run(f'xdotool windowactivate {windowID}')
     break
 else:
+    # No window with associated process name {args.program}
     if args.verbose:
         print(f'Couldn\'t find a window found for {args.program}.')
-    run(' '.join([args.program, args.args]))
+    run(f'{args.program} {args.args}')
