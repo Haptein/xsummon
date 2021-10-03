@@ -1,19 +1,17 @@
 #!/usr/bin/python3
 import argparse
-import subprocess
 from sys import exit
+from subprocess import run, PIPE
 
-PIPE = subprocess.PIPE
-
-def run(command, allowError=False):
+def shell(command, allowError=False):
     # runs as bash command and returns output (or notifies exception if something went wrong)
     try:
-        response = subprocess.run(command, stdout=PIPE, stderr=PIPE, shell=True)
+        response = run(command, stdout=PIPE, stderr=PIPE, shell=True)
     except FileNotFoundError:
         print(f'Error encountered running: {command}\nExecutable not found.')
-        notifySendAvailable = not bool(subprocess.run(['which', 'notify-send'], stdout=PIPE).returncode)
+        notifySendAvailable = not bool(run(['which', 'notify-send'], stdout=PIPE).returncode)
         if notifySendAvailable:
-            run('notify-send xsummon.log ExecutableNotFound')
+            shell('notify-send xsummon.log ExecutableNotFound')
         exit()
 
     if response.returncode > 0 and not allowError:
@@ -26,9 +24,9 @@ def run(command, allowError=False):
             print(f'Error encountered running: {command}\n'
                   'Details written to xsummon.log')
 
-        notifySendAvailable = not bool(subprocess.run(['which', 'notify-send'], stdout=PIPE).returncode)
+        notifySendAvailable = not bool(run(['which', 'notify-send'], stdout=PIPE).returncode)
         if notifySendAvailable:
-            run('notify-send xsummon.log UnexpectedError')
+            shell('notify-send xsummon.log UnexpectedError')
         exit()
 
     return response.stdout.decode('utf-8')
@@ -44,8 +42,8 @@ argparser.add_argument('-g', '--go', action='store_true',
 argparser.add_argument('-v', '--verbose', action='store_true')
 args = argparser.parse_args()
 
-candidatePIDs = run(f'pgrep {args.program[:15]}', allowError=True).split()
-windowInfos = [line.split()[:3] for line in run('wmctrl -lp').split('\n') if line]  # windowid, desktop, pid
+candidatePIDs = shell(f'pgrep {args.program[:15]}', allowError=True).split()
+windowInfos = [line.split()[:3] for line in shell('wmctrl -lp').split('\n') if line]  # windowid, desktop, pid
 
 if args.verbose:
     print(f'Candidate PIDs for window process of {args.program}:\n' + '\n'.join(candidatePIDs))
@@ -60,27 +58,27 @@ for windowID, windowDesktop, windowPID in windowInfos:
     windowID = int(windowID, 16)
     windowDesktop = int(windowDesktop)
 
-    activeWindowID = run('xdotool getactivewindow', allowError=True)
+    activeWindowID = shell('xdotool getactivewindow', allowError=True)
     if activeWindowID:
         activeWindowID = int(activeWindowID)
 
-    activeDesktop = int(run('xdotool get_desktop'))
+    activeDesktop = int(shell('xdotool get_desktop'))
 
     # main logic
     if activeDesktop == windowDesktop:
         if activeWindowID == windowID:
-            run(f'xdotool windowminimize {windowID}')
+            shell(f'xdotool windowminimize {windowID}')
         else:
-            run(f'xdotool windowactivate {windowID}')
+            shell(f'xdotool windowactivate {windowID}')
     else:
         if args.go:
-            run(f'xdotool set_desktop {windowDesktop}')
+            shell(f'xdotool set_desktop {windowDesktop}')
         else:
-            run(f'xdotool set_desktop_for_window {windowID} {activeDesktop}')
-        run(f'xdotool windowactivate {windowID}')
+            shell(f'xdotool set_desktop_for_window {windowID} {activeDesktop}')
+        shell(f'xdotool windowactivate {windowID}')
     break
 else:
     # No window with associated process name {args.program}
     if args.verbose:
         print(f'Couldn\'t find a window found for {args.program}.')
-    run(f'{args.program} {args.args}')
+    shell(f'{args.program} {args.args}')
