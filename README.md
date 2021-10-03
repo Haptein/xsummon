@@ -46,7 +46,7 @@ sudo rm /usr/bin/xsummon
 ## Usage
 
 ```
-usage: xsummon [-h] [-a ARGS] [-g] program
+usage: xsummon [-h] [-a ARGS] [-g] [-m] [-v] program
 
 Call/hide a specific window.
 
@@ -59,4 +59,6 @@ optional arguments:
                         firefox --args="--fullscreen"
   -g, --go              go to window's desktop instead of summoning it to the
                         active desktop
+  -m, --mute            mute notifications (if libnotify is present)
+  -v, --verbose
 ```
